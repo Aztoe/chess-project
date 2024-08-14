@@ -17,7 +17,7 @@ import lombok.Setter;
 public class Figure {
     public static final String CODE_PREFIX = "&#";
 
-    public static final int CODE_NUMBER = 9812;
+    public static final int CODE_NUMBER = 9812; //체스 말 번호
 
     @Id
     @Column

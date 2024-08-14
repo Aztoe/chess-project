@@ -81,7 +81,7 @@ public class GameController {
     	if(game.isPresent()) {
     		Figure f = figures.getOne(pawnId);
     		
-    		if(f.getOwner() ==game.get().getCurrentPlayer()) {
+    		if(f.getOwner() ==game.get().getCurrentPlayer() ) {
     			f.setX(x);
     			f.setY(y);
     			figures.save(f);
@@ -123,7 +123,6 @@ public class GameController {
         		
         		figures.save(f1);
         		figures.save(f2);
-        		
         		log.info("pawn moved");
         		
         		//
@@ -137,10 +136,30 @@ public class GameController {
         	
         	
             model.addAttribute("game", game.get());
-            return "game-play";
+            return GAME_REDIRECTION + game.get().getId();
         }
         log.info("game {} not found for route /play/{}",  gameId);
         return INDEX_REDIRECTION;
+    }
+    
+    @GetMapping("/delete/{gameId}/{pawnId}") 
+    public String delete(final Model model,
+    	@PathVariable("gameId") Long gameId,
+    	@PathVariable("pawnId") Long pawnId
+    		) {
+    	Optional<Game> game= games.findById(gameId);
+    	
+    	if(game.isPresent()) {
+    		log.info("여기까진");
+    		Figure f = figures.getOne(pawnId);
+    		f.setKilled(1);
+    		figures.save(f);
+    		log.info("pawn killed");
+    		Game g = game.get();
+            return GAME_REDIRECTION + game.get().getId();
+    	}
+        return INDEX_REDIRECTION;
+
     }
     
     	
