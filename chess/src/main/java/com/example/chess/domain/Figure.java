@@ -26,14 +26,18 @@ public class Figure {
     private Long id;
 
     @Column
-    int code;
+    Integer	code;
 
     @Column
-    int x;
+    Integer x;
 
     @Column
-    int y;
-
+    Integer y;
+    
+    @Column
+    Integer killed;
+    
+    
     @Column
     String name;
 

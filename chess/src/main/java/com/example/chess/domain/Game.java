@@ -22,7 +22,7 @@ public class Game {
 	public static final int NUMBER_OF_PLAYER_IN_GAME = 2;
 
     public static final List<String> FIGURES_PLACEMENT = Arrays.asList(
-            "rook",	
+    		"rook",
             "knight",
             "bishop",
             "queen",
@@ -30,7 +30,9 @@ public class Game {
             "bishop",
             "knight",
             "rook"
+            
     );
+    public static final int START_PLAYER = PlayerName.WHITE.ordinal();
     
 	public static final int WIDTH =8;
 	
@@ -43,11 +45,27 @@ public class Game {
 	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "game")
 	private List<Figure> grid;
 
+	@Column(nullable = false)
+	private Integer currentPlayer =START_PLAYER;
 	
-	
-	
+	 public int getCurrentPlayer() {
+	        return currentPlayer;
+	    }
+
+	    public void setCurrentPlayer(int currentPlayer) {
+	        this.currentPlayer = currentPlayer;
+	    }
+
+	    public void changePlayer() {
+	        this.currentPlayer = 1 - this.currentPlayer;
+	    }
 	
 	public Figure getFigureAt(int x , int y) {
+		
+		if (x < 0 || x > 7 || y < 0 || y > 7) {
+            return null;
+        }
+
 		for (Figure figure : grid) {
 			if(figure.getX() ==x && figure.getY() ==y) {
 				return figure;
@@ -56,6 +74,9 @@ public class Game {
 		return null;
 	}
 	
+    public boolean isCellFree(int x, int y) {
+        return getFigureAt(x, y) == null;
+    }
 	
 	
 }

@@ -14,6 +14,7 @@
 .cell {
     /* width: 64px; */
     height: 70px;
+    width: 70px;
 }
 
 .cell.even {
