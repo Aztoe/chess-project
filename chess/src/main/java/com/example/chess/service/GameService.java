@@ -1,13 +1,16 @@
 package com.example.chess.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.example.chess.domain.Castling;
 import com.example.chess.domain.Figure;
 import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
+import com.example.chess.domain.PlayerName;
 
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
@@ -28,7 +31,6 @@ public class GameService {
 	        fig.setCode(code);
 	        fig.setX(x);
 	        fig.setY(y);
-	        fig.setKilled(0);
 	        fig.setName(name);
 	        fig.setOwner(owner);
 	        fig.setGame(game);
@@ -48,6 +50,9 @@ public class GameService {
 	 	public boolean isSegmentFree(Game game, int x1, int y1, int x2, int y2) {
 	 		int dx= isPositive(x2-x1);
 	 		int dy= isPositive(y2-y1);
+	 		
+	 		x2 -=dx;
+	 		y2 -=dy;
 	 		
 	 		while(x1 != x2 || y1 != y2) {
 	 			x1 +=dx;
@@ -80,40 +85,117 @@ public class GameService {
 	        return checkBishop(game, x, y, nx, ny) || checkRook(game, x, y, nx, ny);
 	    }
 
-	    public boolean checkKing(int x, int y, int nx, int ny) {
-	        return Math.abs(x - nx) <= 1 && Math.abs(y - ny) <= 1;
+	    public boolean checkKing(Game game, Figure f1, int nx, int ny) {
+	    	if (checkBigCastling(game, f1, nx, ny)) {
+	    		log.info("queenSide");
+	            startCastling(game, 0, 3);
+	            return true;
+	        } else if (checkSmallCastling(game, f1, nx, ny)) {
+	        	log.info("kingSide");
+	            startCastling(game, 7, 5);
+	            return true;
+	        } else {
+	            return Math.abs(f1.getX() - nx) <= 1 && Math.abs(f1.getY() - ny) <= 1;
+	        }
+
+	    	
 	    }
 
 	    public boolean checkKnight(int x, int y, int nx, int ny) {
 	        return (Math.abs(x - nx) == 1 && Math.abs(y - ny) == 2) ||
 	                (Math.abs(x - nx) == 2 && Math.abs(y - ny) == 1);
 	    }
+	    
+	    public boolean checkPawn(Game game, Figure f, int nx, int ny) {
+	        int owner = f.getOwner();
+	        int dy = Arrays.asList(-1, 1).get(owner);
+	        int py = f.getY() + dy;
+	        int x = f.getX();
+
+	        if (nx == x) {
+	            if (game.isCellFree(nx, ny) && ny == py) {
+	                return true;
+	            } else if (f.getY() == (5 * (1 - owner) + 1) && ny == (py + dy)) { 
+	                return game.isCellFree(x, py) && game.isCellFree(x, py + dy);
+	            }
+	        } else if (Math.abs(nx - x) == 1 && ny == py) {
+	            return game.getFigureAt(nx, ny) != null;
+	        }
+
+	        return false;
+	    }
+
 
 	    public boolean checkAny(Game game, Figure f1, int dx, int dy) {
 	        FigureName name = FigureName.stringToFigureName(f1.getName());
 	        int x = f1.getX();
 	        int y = f1.getY();
 	        boolean check = false;
-	        
 	        switch (name) {
-            case KING:
-                check = checkKing(x, y, dx, dy);
-                break;
-            case QUEEN:
-                check = checkQueen(game, x, y, dx, dy);
-                break;
-            case BISHOP:
-                check = checkBishop(game, x, y, dx, dy);
-                break;
-            case ROOK:
-                check = checkRook(game, x, y, dx, dy);
-                break;
-            case KNIGHT:
-                check = checkKnight(x, y, dx, dy);
-                break;
-        }
+	            case KING:
+	                check = checkKing(game,f1 , dx, dy);
+	                log.info("checkKing 실행");
+	                break;
+	            case QUEEN:
+	                check = checkQueen(game, x, y, dx, dy);
+	                break;
+	            case BISHOP:
+	                check = checkBishop(game, x, y, dx, dy);
+	                break;
+	            case ROOK:
+	                check = checkRook(game, x, y, dx, dy);
+	                break;
+	            case KNIGHT:
+	                check = checkKnight(x, y, dx, dy);
+	                break;
+	            case PAWN:
+	                check = checkPawn(game, f1, dx, dy);
+	                break;
+	        }
+
 	        return check;
-	    } 
+	    }
+	    
+	    public boolean checkBigCastling(Game game, Figure f1, int dx, int dy) {
+	        int yKing = (f1.getOwner() == PlayerName.BLACK.ordinal()) ? 0 : 7;
+	        int xKing = 4;
+
+	        if (f1.getX() == xKing && f1.getY() == yKing && f1.getMoveCount() == 0) {
+	            if (game.getFigureAt(7, yKing) != null && game.getFigureAt(7, yKing).getMoveCount() == 0) {
+	                isSegmentFree(game, f1.getX(), f1.getY(), 1, yKing);
+	                return dx == 2 && dy == yKing;
+	            }
+	        }
+
+	        return false;
+	    }
+	    
+	 
+	   
+	    
+	   
+	    
+	    public boolean checkSmallCastling(Game game, Figure f1, int dx, int dy) {
+	        int yKing = (f1.getOwner() == PlayerName.BLACK.ordinal()) ? 0 : 7;
+	        int xKing = 4;
+
+	        if (f1.getX() == xKing && f1.getY() == yKing && f1.getMoveCount() == 0) {
+	            if (game.getFigureAt(7, yKing) != null && game.getFigureAt(7, yKing).getMoveCount() == 0) {
+	                isSegmentFree(game, f1.getX(), f1.getY(), 7, yKing);
+	                return dx == 6 && dy == yKing;
+	            }
+	        }
+
+	        return false;
+	    }
+
+	    
+	    public void startCastling(Game game, int xRook, int dxRook) {
+	        int player = game.getCurrentPlayer();
+	        int yRook = (player == PlayerName.BLACK.ordinal()) ? 0 : 7;
+	        game.getFigureAt(xRook, yRook).setX(dxRook);
+	    }
+	    
 	 	
 	    public void generateGrid(final Game game) {
 	    	

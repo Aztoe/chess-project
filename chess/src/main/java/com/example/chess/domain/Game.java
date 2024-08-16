@@ -3,10 +3,11 @@ package com.example.chess.domain;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -32,7 +33,19 @@ public class Game {
             "rook"
             
     );
+    
+
+    public static final List<String> FIGURES_PROMOTION = Arrays.asList(
+    		"rook",
+            "knight",
+            "bishop",
+            "queen"
+           
+    );
+    
     public static final int START_PLAYER = PlayerName.WHITE.ordinal();
+    
+   
     
 	public static final int WIDTH =8;
 	
@@ -77,6 +90,8 @@ public class Game {
     public boolean isCellFree(int x, int y) {
         return getFigureAt(x, y) == null;
     }
+    
+    
 	
 	
 }

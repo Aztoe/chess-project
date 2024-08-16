@@ -47,7 +47,6 @@ public class GameController {
         // 체스판 생성
         gameService.generateGrid(g);
 
-        // save generated figures
         figures.saveAll(g.getGrid());
         log.info("figures saved from game/");
 
@@ -82,17 +81,22 @@ public class GameController {
     		Figure f = figures.getOne(pawnId);
     		
     		if(f.getOwner() ==game.get().getCurrentPlayer() ) {
-    			f.setX(x);
-    			f.setY(y);
-    			figures.save(f);
-    			log.info("moved");
+    			if(gameService.checkAny(game.get(), f, x, y)) {
+    				 log.info("moveOnvoid 실행");
+                     f.setX(x);
+                     f.setY(y);
+                     f.updateMoveCount();
+                     figures.save(f);
+                     log.info("figure moved");
+
+                     Game g = game.get();
+                     g.changePlayer();
+                     games.save(g);
+    			}
     			
-    			Game g = game.get();
-    			log.info(game.get().toString());
-    			g.changePlayer();
-    			games.save(g);
+              
     		}else {
-    			log.info("you cant move other pawn");
+    			log.info("is not valid");
     		}
     		model.addAttribute("game" ,game.get());
         	return GAME_REDIRECTION+game.get().getId();
@@ -102,7 +106,7 @@ public class GameController {
         return INDEX_REDIRECTION;
     	}
     
-    @GetMapping("/move/{gameid}{pawnId1}/{pawnId2}")
+    @GetMapping("/move/{gameId}/{pawnId1}/{pawnId2}")
     public String moveOnAnyPawn(final Model model,
                                  @PathVariable("gameId") final Long gameId,
                                  @PathVariable("pawnId1") final Long pawnId1,
@@ -110,32 +114,40 @@ public class GameController {
     ) {
         Optional<Game> game = games.findById(gameId);
         if (game.isPresent()) {
-        	
+        	log.info("moveOnAnyPawn실행");
         	Figure f1 = figures.getOne(pawnId1);
         	Figure f2 = figures.getOne(pawnId2);
         	
-        	if(f1.getOwner() == game.get().getCurrentPlayer()) {
+        	 if (f1.getOwner() == game.get().getCurrentPlayer() && f1.getOwner() != f2.getOwner()) {
+        	
+        			if(gameService.checkAny(game.get(), f1, f2.getX(), f2.getY())) {
+        				f1.setX(f2.getX());
+                		f1.setY(f2.getY());
+                		f1.updateMoveCount();
+                		figures.save(f1);
+                		log.info("pawn moved");
+
+                		figures.delete(f2);
+                		log.info("figure f2 delelted");
+                		
+                		 
+                		
+                		Game g = game.get();
+                         g.changePlayer();
+                         g.getGrid().remove(f2);
+                         
+                         games.save(g);
+                		//
+        			
+        			}
+        				
         		
-        		f2.setKilled(1);
+        	
         		
-        		f1.setX(f2.getX());
-        		f1.setY(f2.getY());
-        		
-        		figures.save(f1);
-        		figures.save(f2);
-        		log.info("pawn moved");
-        		
-        		//
-        		 Game g = game.get();
-                   g.changePlayer();
-                   games.save(g);
         	} else {
         		log.info("you can't move");
         	}
-        	
-        	
-        	
-            model.addAttribute("game", game.get());
+        	 model.addAttribute("game", game.get());
             return GAME_REDIRECTION + game.get().getId();
         }
         log.info("game {} not found for route /play/{}",  gameId);
@@ -152,10 +164,11 @@ public class GameController {
     	if(game.isPresent()) {
     		log.info("여기까진");
     		Figure f = figures.getOne(pawnId);
-    		f.setKilled(1);
     		figures.save(f);
     		log.info("pawn killed");
     		Game g = game.get();
+    		
+    		
             return GAME_REDIRECTION + game.get().getId();
     	}
         return INDEX_REDIRECTION;

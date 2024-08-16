@@ -13,7 +13,7 @@ import lombok.Setter;
 
 
 @Entity
-@Getter @Setter
+@Getter 
 public class Figure {
     public static final String CODE_PREFIX = "&#";
 
@@ -34,8 +34,6 @@ public class Figure {
     @Column
     Integer y;
     
-    @Column
-    Integer killed;
     
     
     @Column
@@ -43,11 +41,49 @@ public class Figure {
 
     @Column
     int owner;
+    
+    @Column
+    int moveCount=0;
 
     @ManyToOne
     private Game game;
 
-   
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public void setCode(int code) {
+        if (code >= 0 && code <= 5) {
+            this.code = code;
+        }
+    }
+    
+    public void setX(int x) {
+        if (x >= 0 && x <= 7) {
+            this.x = x;
+        }
+    }
+    
+    public void setY(int y) {
+        if (y >= 0 && y <= 7) {
+            this.y = y;
+        }
+    }
+    
+    public void setOwner(int owner) {
+        this.owner = owner;
+    }
+    
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    
+    public void setName(String name) {
+        if (FigureName.stringToFigureName(name) != null) {
+            this.name = name;
+        }
+    }
 
     public String getHtmlCode() {
         String htmlCode = CODE_PREFIX + (CODE_NUMBER + code) + ";";
@@ -57,6 +93,10 @@ public class Figure {
         }
 
         return htmlCode;
+    }
+    
+    public void updateMoveCount() {
+    	this.moveCount += 1;
     }
 
 	

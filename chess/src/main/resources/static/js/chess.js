@@ -5,7 +5,7 @@
 
 let board = $("#board");
 
-board.find('.figure')
+/*board.find('.figure')
     .draggable({
         revert: 'invalid',
         containment: board
@@ -18,42 +18,42 @@ board.find('.figure').droppable({
         $(dropped).parent().droppable("enable");
         $(dropped).detach().css({top: 0, left: 0}).appendTo(droppedOn);
     }
-});
+});*/
 
-board.find('.figure').not('td:empty').droppable("disable");
+//board.find('.figure').not('td:empty').droppable("disable");
 
 
-    $(function() {
+    $(function(e) {
+    	
+        let turnText =  $('#player-turn').html();
+
         $('.figure').draggable({
             containment: board,
             zIndex: 1,
             snap: ".cell", 
-            revert: function() {
-                if($(this).hasClass('drag-revert')) {
-                    $(this).removeClass('drag-revert');
-                    return true;
-                }
-            }
-        })
+            revert: 'invalid'
+        });
 
         $('.cell').droppable({
-            accept: ".figure",
-            tolerance: 'intersect',
+        	 accept: function (el) {
+                 return el.hasClass(turnText.toLowerCase());
+             },
+            tolerance: 'intersect',	
             over: function () {
                 $(this).css("background-color", "green");
-
+                console.log($(this).attr('class'));
             },
             out: function () {
                 $(this).css("background-color", "")
             },
             drop: function (event ,ui) {
-             	let dropped = ui.draggable;
+             	 let dropped = ui.draggable;
              	 let droppedOn = $(this);
 
                 let gameId = $(location).attr('href').split('/')[5]; // http://localhost:8080/game/{id}
 
                 let deleteUrl;
-
+/*
                 if($(this).attr('class').indexOf('disabled') >0) {
                     deleteUrl = '/game/delete/' + gameId + '/' + $(this).children().attr('data-id');
                     $(this).children().remove();
@@ -63,23 +63,25 @@ board.find('.figure').not('td:empty').droppable("disable");
                             console.log("Piece killed");
                         }
                     });
-                }
+                }*/
+                const oldPawnId = $(droppedOn).children();
+                const oldClass =$(this).attr('class').indexOf('disabled');
+                
                 $(droppedOn).css("background-color", "");
                 $(this).addClass('disabled');
                 $(dropped).parent().removeClass('disabled');
                 $(dropped).parent().droppable("enable");
                 $(dropped).detach().css({top: 0, left: 0}).appendTo(droppedOn);
+                let newPawnId = $(dropped).attr('data-id');
 
 
-                let pawnId = $(droppedOn).children().attr('data-id');
-                 let x = $(droppedOn).attr('data-x');
+                let x = $(droppedOn).attr('data-x');
                 let y = $(droppedOn).attr('data-y');
 
-                let moveUrl = '/game/move/' + gameId + '/' + pawnId + '/' + x + '/' + y;
+                let moveUrl = '/game/move/' + gameId + '/' +newPawnId + '/' + x + '/' + y;
 
-                let turnText = $('#player-turn').html();
 
-                $.ajax({
+            /*    $.ajax({
                     url: moveUrl, success:function (result) {
                         console.log("move");
                         if (turnText === 'Black') {
@@ -88,9 +90,17 @@ board.find('.figure').not('td:empty').droppable("disable");
                             $('#player-turn').text(turnText.replace(turnText, "Black"))
                         }
                     }
-                })
+                })*/
+                if (oldClass > 0) {
+                    deleteUrl = '/game/move/' + gameId + '/' + newPawnId + '/' + oldPawnId.attr('data-id');
+                    oldPawnId.remove();
+                    window.location.href = deleteUrl;
+                } else {
+                	console.log("move");
+                    window.location.href = moveUrl;
+                }
             }
-        })
-    })
+        });
+    });
 
 console.log("js fully loaded")
