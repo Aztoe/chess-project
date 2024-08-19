@@ -5,11 +5,15 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.example.chess.controller.form.PromoteForm;
 import com.example.chess.domain.Figure;
+import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
 import com.example.chess.repository.FigureRepository;
 import com.example.chess.repository.GameRepository;
@@ -92,6 +96,10 @@ public class GameController {
                      Game g = game.get();
                      g.changePlayer();
                      games.save(g);
+                     
+                     if(gameService.enablePawnPromote(f)) {
+                    	 return "redirect:/game/promote/" + game.get().getId() + "/" + f.getId();
+                     }
     			}
     			
               
@@ -136,8 +144,11 @@ public class GameController {
                          g.changePlayer();
                          g.getGrid().remove(f2);
                          
-                         games.save(g);
-                		//
+                         games.save(g);	
+                		//	
+                         if(gameService.enablePawnPromote(f1)) {
+                        	 return "redirect:/game/promote/" + game.get().getId() + "/" + f1.getId();
+                         }
         			
         			}
         				
@@ -152,6 +163,48 @@ public class GameController {
         }
         log.info("game {} not found for route /play/{}",  gameId);
         return INDEX_REDIRECTION;
+    }
+    
+    @GetMapping("/promote/{gameId}/{promoteId}")
+    public String promote(final Model model,
+                          @PathVariable("gameId") final Long gameId,
+                          @PathVariable("promoteId") final Long promoteId
+    ) {
+        Optional<Game> game = games.findById(gameId);
+        if (game.isPresent()) {
+            Optional<Figure> fig = figures.findById(promoteId);
+            if (fig.isPresent()) {
+                model.addAttribute("game", game.get());
+                model.addAttribute("error_msg", "");
+                model.addAttribute("figure", fig.get());
+                return "game-promote";
+            }
+        }
+        log.info("game {} not found for route /promote/{}/{}", gameId, gameId, promoteId);
+        return INDEX_REDIRECTION;
+    }
+
+    @PostMapping("/promote")
+    public String promoteForm(PromoteForm form, BindingResult result) {
+        if (result.hasErrors()) {
+            log.info("error promote form");
+        }
+
+        log.info("you decided to promote {} to a {}", form.getId(), form.getName());
+
+        Optional<Figure> figure = figures.findById(form.getId());
+
+        if (figure.isPresent()) {
+            if (Game.FIGURES_PROMOTION.contains(form.getName())) {
+                figure.get().setName(form.getName());
+                figure.get().setCode(FigureName.stringToFigureName(form.getName()).ordinal());
+                figures.save(figure.get());
+            }
+
+            return GAME_REDIRECTION + figure.get().getGame().getId();
+        }
+
+        return "game-promote";
     }
     
     @GetMapping("/delete/{gameId}/{pawnId}") 

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.example.chess.domain.Figure;
+import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
 import com.example.chess.service.GameService;
 
@@ -24,7 +25,6 @@ class GameServiceTest {
 	
 	 @Test
 	    public void checkBishopTest() {
-
 	        assertThat(service.checkBishop(game, 2, 7, 0, 5)).isFalse();
 	        game.getFigureAt(1, 6).setY(5);
 	        assertThat(service.checkBishop(game, 2, 7, 0, 5)).isTrue();
@@ -38,7 +38,7 @@ class GameServiceTest {
 	        assertThat(service.checkBishop(game, 2, 7, 2, 5)).isFalse();
 
 	        assertThat(service.checkBishop(game, 2, 7, -1, 8)).isFalse();
-	    }
+	     }
 	
 	@Test
 	public void isPositiveTest() {
@@ -76,4 +76,17 @@ class GameServiceTest {
 
       assertThat(service.checkKing(game, f, 2, 7)).isTrue();
     }
+    
+    
+    @Test
+    public void enablePromotePawnTest() {
+        Figure f = game.getFigureAt(0,6);
+        assertThat(FigureName.stringToFigureName(f.getName())).isEqualTo(FigureName.PAWN);
+
+        assertThat(service.enablePawnPromote(f)).isFalse();
+
+        f.setY(0);
+        assertThat(service.enablePawnPromote(f)).isTrue();
+    }
+
 }

@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.example.chess.domain.Castling;
 import com.example.chess.domain.Figure;
 import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
@@ -212,5 +211,10 @@ public class GameService {
 	        
 	        game.setGrid(grid);
 	        log.info("grid successfully generated");
+	    }
+	    
+	    public boolean enablePawnPromote(Figure f) {
+	    	
+	    	return (FigureName.stringToFigureName(f.getName()) ==FigureName.PAWN && f.getY() ==0 || f.getY() ==7);  
 	    }
 }

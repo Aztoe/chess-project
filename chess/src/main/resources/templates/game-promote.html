@@ -1,0 +1,59 @@
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title th:fragment="title">Chess v1.0</title>
+</head>
+<body>
+<!--/* Game page to play chess */-->
+<div th:fragment="content" th:id="'game'+${game.getId()}">
+    <h1 class="text-center">Welcome to Chess</h1>
+    <div class="container-fluid">
+        <h2>Game <span th:text="${game.getId()}"></span></h2>
+        <ul>
+            <li>Player <span>1</span> is <span th:text="${game.getCurrentPlayer() != 1 ? 'White' : 'Black'}" class="bold">Black</span></li>
+            <li>Player <span>2</span> is <span th:text="${game.getCurrentPlayer() == 1 ? 'White' : 'Black'}" class="bold">White</span></li>
+        </ul>
+        <h4><span id="player-turn" th:text="${game.getCurrentPlayer() == 1 ? 'Black' : 'White'}">Black</span> player your turn !</h4>
+        <h5 th:text="${error_msg}" class="alert-message">A message appear !</h5>
+    </div>
+    <div class="flex-container">
+        <table id="board">
+            <tr th:each="y: ${#numbers.sequence(0, game.WIDTH - 1)}" class="line">
+                <td th:each="x: ${#numbers.sequence(0, game.WIDTH - 1)}" class="cell ui-droppable" th:classappend="|${(x % 2 == y % 2) ? 'odd' : 'even' } ${(game.getFigureAt(x, y) != null) ? 'disabled' : ''}|" th:attr="data-x=${x}, data-y=${y}">
+                    <div th:if="${game.getFigureAt(x, y) != null}" th:utext="${game.getFigureAt(x, y).getHtmlCode()}" th:attr="data-id=${game.getFigureAt(x, y).getId()}" class="figure ui-draggable" th:classappend="|${(game.getFigureAt(x,y).getOwner() == 0) ? 'white' : 'black' }|" style="position: relative;">♜</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--/* Promotion modal */-->
+    <div class="modal" id="promotionModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title">폰을 다른 기물로 바꿀 수 있습니다.</h4>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <div class="container-fluid text-center">
+                        <form action="#" th:action="@{/game/promote}" th:object="${figure}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+                            <div class="form-group">
+                                <label for="name">Choose your piece</label>
+                                <select name="name" id="name" class="form-control" th:field="*{name}">
+                                    <option th:value="queen" th:text="queen"></option>
+                                    <option th:value="bishop" th:text="bishop"></option>
+                                    <option th:value="rook" th:text="rook"></option>
+                                    <option th:value="knight" th:text="knight"></option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">승급</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>

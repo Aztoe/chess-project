@@ -102,5 +102,9 @@ board.find('.figure').droppable({
             }
         });
     });
+    
+    if ($(location).attr('href').split('/')[4] === "promote") {
+        $('#promotionModal').modal('toggle');
+    }
 
 console.log("js fully loaded")
