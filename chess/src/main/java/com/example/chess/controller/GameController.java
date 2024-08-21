@@ -3,16 +3,26 @@ package com.example.chess.controller;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.example.chess.controller.form.PromoteForm;
 import com.example.chess.domain.Figure;
+import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
+import com.example.chess.domain.Move;
+import com.example.chess.domain.User;
 import com.example.chess.repository.FigureRepository;
+import com.example.chess.repository.GameListRepository;
 import com.example.chess.repository.GameRepository;
+import com.example.chess.repository.MoveRepository;
+import com.example.chess.repository.UserRepository;
 import com.example.chess.service.GameService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +38,15 @@ public class GameController {
 
     @Autowired
     private FigureRepository figures;
+    
+    @Autowired
+    private MoveRepository moves;
+    
+    @Autowired
+    private GameListRepository gamesList;
+    
+    @Autowired
+    private UserRepository users;
 
     private static final String GAME_REDIRECTION = "redirect:/game/play/";
 
@@ -38,34 +57,66 @@ public class GameController {
     public String display(final Model model) {
         games.deleteAll();
         figures.deleteAll();
-
+        moves.deleteAll();
         // 
         Game g = new Game();
-
+        g.setGameTime();
+        g.setTimeCurrentPlayer(System.currentTimeMillis());
         games.save(g);
-
+        	
         // 체스판 생성
         gameService.generateGrid(g);
 
         figures.saveAll(g.getGrid());
         log.info("figures saved from game/");
-
+        gameService.findKing(g);
+        games.save(g);
         model.addAttribute("game", g);
 
         return GAME_REDIRECTION +g.getId();
     }
     
     @GetMapping("/play/{id}")
-    public String play(final Model model,@PathVariable("id") Long id) {
+    public String play(final Model model,
+    				@PathVariable("id") Long id,
+    				@AuthenticationPrincipal User currentUser
+    		) {
+    				
     	Optional<Game> game = games.findById(id);
     	
     	if(game.isPresent()) {
+    		
+    	
+    		
     		model.addAttribute("game", game.get());
+
+    		model.addAttribute("user", currentUser);
     		model.addAttribute("error_msg","");
+    		model.addAttribute("time", gameService.getTimeElapsed(game.get().getGameTime()));
+    		model.addAttribute("time_move",gameService.getTimeElapsed(game.get().getTimeCurrentPlayer()));
+    		
+    		if (gameService.checkEchec(game.get())) {
+                game.get().setEchec(1);
+            } else {
+                game.get().setEchec(0);
+            }
+        	
+            model.addAttribute("mate", gameService.checkMate(game.get()));
+            
+            if(gamesList.findByGameId(id) != null)
+                model.addAttribute("gameList", gamesList.findByGameId(id));
+
+            users.save(currentUser);
+    		
+    		
     		return "game-play";
     	}
     	log.info("game {} not found  /play/{}",id,id);
+    	
+
     	return INDEX_REDIRECTION;
+    	
+    	
     	
    	
     
@@ -82,16 +133,30 @@ public class GameController {
     		
     		if(f.getOwner() ==game.get().getCurrentPlayer() ) {
     			if(gameService.checkAny(game.get(), f, x, y)) {
-    				 log.info("moveOnvoid 실행");
-                     f.setX(x);
+    				Move m = new Move();
+    				m.setPositionStart(f.getMoveCode());
+                     
+    				 f.setX(x);
                      f.setY(y);
                      f.updateMoveCount();
                      figures.save(f);
-                     log.info("figure moved");
-
+                     	
+                     m.setPositionEnd(f.getMoveCode());
+                     m.setPlayer(game.get().getCurrentPlayer());
+                     
+                     m.setTime(gameService.getTimeElapsed(game.get().getTimeCurrentPlayer()));
+                     m.setGame(game.get());
+                     moves.save(m);
+                     	
                      Game g = game.get();
                      g.changePlayer();
+                     g.setTimeCurrentPlayer(System.currentTimeMillis());
+                     g.getMoves().add(m);
                      games.save(g);
+                     
+                     if(gameService.enablePawnPromote(f)) {
+                    	 return "redirect:/game/promote/" + game.get().getId() + "/" + f.getId();
+                     }
     			}
     			
               
@@ -121,6 +186,9 @@ public class GameController {
         	 if (f1.getOwner() == game.get().getCurrentPlayer() && f1.getOwner() != f2.getOwner()) {
         	
         			if(gameService.checkAny(game.get(), f1, f2.getX(), f2.getY())) {
+        				Move m = new Move();
+                        m.setPositionStart(f1.getMoveCode());
+
         				f1.setX(f2.getX());
                 		f1.setY(f2.getY());
                 		f1.updateMoveCount();
@@ -130,21 +198,24 @@ public class GameController {
                 		figures.delete(f2);
                 		log.info("figure f2 delelted");
                 		
-                		 
+                		 m.setPositionEnd(f1.getMoveCode());
+                         m.setPlayer(game.get().getCurrentPlayer());
+                         m.setTime(gameService.getTimeElapsed(game.get().getTimeCurrentPlayer()));
+                         m.setGame(game.get()); 
                 		
                 		Game g = game.get();
                          g.changePlayer();
                          g.getGrid().remove(f2);
                          
-                         games.save(g);
-                		//
+                         games.save(g);	
+                		//	
+                         if(gameService.enablePawnPromote(f1)) {
+                        	 return "redirect:/game/promote/" + game.get().getId() + "/" + f1.getId();
+                         }
         			
         			}
         				
-        		
-        	
-        		
-        	} else {
+        		} else {
         		log.info("you can't move");
         	}
         	 model.addAttribute("game", game.get());
@@ -152,6 +223,48 @@ public class GameController {
         }
         log.info("game {} not found for route /play/{}",  gameId);
         return INDEX_REDIRECTION;
+    }
+    
+    @GetMapping("/promote/{gameId}/{promoteId}")
+    public String promote(final Model model,
+                          @PathVariable("gameId") final Long gameId,
+                          @PathVariable("promoteId") final Long promoteId
+    ) {
+        Optional<Game> game = games.findById(gameId);
+        if (game.isPresent()) {
+            Optional<Figure> fig = figures.findById(promoteId);
+            if (fig.isPresent()) {
+                model.addAttribute("game", game.get());
+                model.addAttribute("error_msg", "");
+                model.addAttribute("figure", fig.get());
+                return "game-promote";
+            }
+        }
+        log.info("game {} not found for route /promote/{}/{}", gameId, gameId, promoteId);
+        return INDEX_REDIRECTION;
+    }
+
+    @PostMapping("/promote")
+    public String promoteForm(PromoteForm form, BindingResult result) {
+        if (result.hasErrors()) {
+            log.info("error promote form");
+        }
+
+        log.info("you decided to promote {} to a {}", form.getId(), form.getName());
+
+        Optional<Figure> figure = figures.findById(form.getId());
+
+        if (figure.isPresent()) {
+            if (Game.FIGURES_PROMOTION.contains(form.getName())) {
+                figure.get().setName(form.getName());
+                figure.get().setCode(FigureName.stringToFigureName(form.getName()).ordinal());
+                figures.save(figure.get());
+            }
+
+            return GAME_REDIRECTION + figure.get().getGame().getId();
+        }
+
+        return "game-promote";
     }
     
     @GetMapping("/delete/{gameId}/{pawnId}") 

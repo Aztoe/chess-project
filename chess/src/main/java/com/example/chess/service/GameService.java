@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.example.chess.domain.Castling;
 import com.example.chess.domain.Figure;
 import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
@@ -16,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class GameService {
-
+	//millisecond 를 second 로 바꿈
+	 private static final int S_CONVERT = 1000;
+	
 	 private void addFigureToGrid(
 	            List<Figure> grid,
 	            Game game,
@@ -196,6 +197,76 @@ public class GameService {
 	        game.getFigureAt(xRook, yRook).setX(dxRook);
 	    }
 	    
+	    public void findKing(Game game) {
+	    	for (int i = 0; i < game.WIDTH; i++) {
+				for (int j = 0; j < game.WIDTH; j++) {
+					if(game.getFigureAt(i, j) !=null && game.getFigureAt(i, j).getName().equals("king")) {
+						if(game.getFigureAt(i, j).getOwner()==0) {
+							game.setWhiteKingId(game.getFigureAt(i, j).getId());
+						} else {
+							game.setBlackKingId(game.getFigureAt(i, j).getId());
+						}
+					}
+				}	
+			}
+	    }
+	    
+	    public boolean checkEchec(Game game) {
+	    	int xKing, yKing;
+	    	int player = game.getCurrentPlayer();
+	    	boolean response =false;
+	    	
+	    	if(player==1) {
+	    		xKing = game.getFigureById(game.getWhiteKingId()).getX();
+	    		yKing = game.getFigureById(game.getWhiteKingId()).getY();
+	    	} else {
+	    		xKing = game.getFigureById(game.getBlackKingId()).getX();
+	    		yKing = game.getFigureById(game.getBlackKingId()).getY();
+	    	}
+	    	for (int i = 0; i < Game.WIDTH; i++) {
+				for (int j = 0; j < Game.WIDTH; j++) {
+					if(game.getFigureAt(i, j) !=null && 
+							game.getFigureAt(i, j).getOwner() !=player) {
+						if(response) {
+							return true;
+						} else {
+							response = checkAny(game, game.getFigureAt(i, j), xKing, yKing);
+						}
+					}
+				}
+			}
+	    	
+	    	return false;
+	    }
+	    
+	    public boolean checkMate(Game game) {
+	    	int xKing, yKing;
+	    	int player = game.getCurrentPlayer();
+	    	boolean response =false;
+	    	
+	    	if(player==1) {
+	    		xKing = game.getFigureById(game.getWhiteKingId()).getX();
+	    		yKing = game.getFigureById(game.getWhiteKingId()).getY();
+	    	} else {
+	    		xKing = game.getFigureById(game.getBlackKingId()).getX();
+	    		yKing = game.getFigureById(game.getBlackKingId()).getY();
+	    	}
+	    	for (int i = 0; i < Game.WIDTH; i++) {
+				for (int j = 0; j < Game.WIDTH; j++) {
+					if(game.getFigureAt(i, j) !=null && 
+							game.getFigureAt(i, j).getOwner() ==player) {
+						if(response) {
+							return true;
+						} else {
+							response = checkAny(game, game.getFigureAt(i, j), xKing, yKing);
+						}
+					}
+				}
+			}
+	    	return false;
+	    	
+	    }
+  	    
 	 	
 	    public void generateGrid(final Game game) {
 	    	
@@ -212,5 +283,14 @@ public class GameService {
 	        
 	        game.setGrid(grid);
 	        log.info("grid successfully generated");
+	    }
+	    
+	    public boolean enablePawnPromote(Figure f) {
+	    	
+	    	return (FigureName.stringToFigureName(f.getName()) ==FigureName.PAWN && f.getY() ==0 || f.getY() ==7);  
+	    }
+	    
+	    public Long getTimeElapsed(final Long time) {
+	        return (System.currentTimeMillis() - time) / S_CONVERT;
 	    }
 }

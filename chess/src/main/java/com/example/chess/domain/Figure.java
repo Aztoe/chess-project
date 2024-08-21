@@ -43,7 +43,7 @@ public class Figure {
     int owner;
     
     @Column
-    int moveCount=0;
+    int moveCount;
 
     @ManyToOne
     private Game game;
@@ -97,6 +97,10 @@ public class Figure {
     
     public void updateMoveCount() {
     	this.moveCount += 1;
+    }
+   //체스판 A~H까지
+    public String getMoveCode() {
+        return (char) (x + 65) + Integer.toString(8 - y);
     }
 
 	
