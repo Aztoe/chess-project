@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,8 @@ import lombok.Setter;
 @Entity
 @Getter @Setter
 public class Game {
+	
+	private static final int S_CONVERT = 1000;
 	
 	public static final int NUMBER_OF_PLAYER_IN_GAME = 2;
 
@@ -57,22 +60,42 @@ public class Game {
 	
 	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "game")
 	private List<Figure> grid;
-
+	
+	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "game")
+    private List<Move> moves;
+	
+	@OneToOne
+	private User whitePlayer;
+	@OneToOne
+	private User blackPlayer;
+		
 	@Column(nullable = false)
 	private Integer currentPlayer =START_PLAYER;
 	
-	 public int getCurrentPlayer() {
-	        return currentPlayer;
-	    }
+	@Column
+	private Long whiteKingId;
+	
+	@Column 
+	private Long blackKingId;
+	@Column
+	private Integer echec;
+	
+	@Column
+	private Long timeWhitePlayer;
 
-	    public void setCurrentPlayer(int currentPlayer) {
-	        this.currentPlayer = currentPlayer;
-	    }
+	@Column
+	private Long timeBlackPlayer;
 
+	@Column
+	private Long gameTime;
+	
+	
 	    public void changePlayer() {
 	        this.currentPlayer = 1 - this.currentPlayer;
 	    }
-	
+	@Enumerated
+	private PlayerName winner;    
+	    
 	public Figure getFigureAt(int x , int y) {
 		
 		if (x < 0 || x > 7 || y < 0 || y > 7) {
@@ -91,7 +114,60 @@ public class Game {
         return getFigureAt(x, y) == null;
     }
     
+
+   public Figure getFigureById(Long id) {
+	   for (Figure f: grid) {
+		   if(f.getId().equals(id)) {
+			   return f;
+		   }
+	   }
+	   return null;
+   }
+   
+  
     
-	
-	
+    public Long getTimeCurrentPlayer() {
+        if (currentPlayer == PlayerName.WHITE.ordinal()) {
+            return timeWhitePlayer;
+        } else if (currentPlayer == PlayerName.BLACK.ordinal()) {
+            return timeBlackPlayer;
+        }
+
+        return null;
+    }
+    
+    public void setTimeCurrentPlayer(Long time) {
+        if (currentPlayer == PlayerName.WHITE.ordinal()) {
+            timeWhitePlayer = time;
+        } else if (currentPlayer == PlayerName.BLACK.ordinal()) {
+            timeBlackPlayer = time;
+        }
+    }
+    
+    public void setGameTime() {
+        this.gameTime = System.currentTimeMillis();
+    }
+
+    public User getCurrentUser() {
+        if (currentPlayer == PlayerName.BLACK.ordinal()) {
+            return getBlackPlayer();
+        } else if (currentPlayer == PlayerName.WHITE.ordinal()) {
+            return getWhitePlayer();
+        }
+
+        return null;
+    }
+    
+    public int getNumberOfPlay(int player) {
+        int count = 0;
+
+        for (Figure f: grid) {
+            if (player == f.getOwner()) {
+                count = count + f.getMoveCount();
+            }
+        }
+
+        return count;
+    }
+
 }

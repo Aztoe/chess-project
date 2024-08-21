@@ -3,7 +3,24 @@
  */
  console.log("hello chess");
 
+$(document).ready(function() {
+    let counterGame = parseInt($("#time")[0].innerText);
+    let counterMove = parseInt($("#time_move")[0].innerText);
+    let interval = setInterval(function() {
+        counterGame++;
+        counterMove++;
+
+        $('#time').text(counterGame);
+        $('#time_move').text(counterMove);
+    }, 1000);
+});
+
+
+
 let board = $("#board");
+//time elasped
+
+
 
 /*board.find('.figure')
     .draggable({
@@ -81,16 +98,7 @@ board.find('.figure').droppable({
                 let moveUrl = '/game/move/' + gameId + '/' +newPawnId + '/' + x + '/' + y;
 
 
-            /*    $.ajax({
-                    url: moveUrl, success:function (result) {
-                        console.log("move");
-                        if (turnText === 'Black') {
-                            $('#player-turn').text(turnText.replace(turnText, "White"))
-                        } else if (turnText === 'White') {
-                            $('#player-turn').text(turnText.replace(turnText, "Black"))
-                        }
-                    }
-                })*/
+
                 if (oldClass > 0) {
                     deleteUrl = '/game/move/' + gameId + '/' + newPawnId + '/' + oldPawnId.attr('data-id');
                     oldPawnId.remove();
@@ -106,5 +114,32 @@ board.find('.figure').droppable({
     if ($(location).attr('href').split('/')[4] === "promote") {
         $('#promotionModal').modal('toggle');
     }
+    
+    $(function () {
+    if ($('#mate').html() != null && $('#winner').html() == null) {
+        let currentPlayer = $('#player-turn').html();
+        let winner = (currentPlayer === "Black" ? $('#Player1').text() : $('#Player2').text());
+        let looser = (currentPlayer === "Black" ? $('#Player2').text() : $('#Player1').text());
+        let gameId = $(location).attr('href').split('/')[5]; // http://localhost:8080/game/play/{id}
+        window.location.href = '/game/endgame/' + gameId + '/' + winner + '/' + looser;
+    }
+});
+    
+    function leaveGame() {
+    let gameId = $(location).attr('href').split('/')[5]; // http://localhost:8080/game/play/{id}
+    window.location.href = '/game/resigning/' + gameId;
+}
+    
 
 console.log("js fully loaded")
+
+            /*    $.ajax({
+                    url: moveUrl, success:function (result) {
+                        console.log("move");
+                        if (turnText === 'Black') {
+                            $('#player-turn').text(turnText.replace(turnText, "White"))
+                        } else if (turnText === 'White') {
+                            $('#player-turn').text(turnText.replace(turnText, "Black"))
+                        }
+                    }
+                })*/
