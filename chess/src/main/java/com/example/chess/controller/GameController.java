@@ -1,6 +1,7 @@
 package com.example.chess.controller;
 
 import java.util.Optional;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -53,28 +54,55 @@ public class GameController {
     private static final String INDEX_REDIRECTION = "redirect:/";
 
 
-    @GetMapping("/start")
-    public String display(final Model model) {
-        games.deleteAll();
-        figures.deleteAll();
-        moves.deleteAll();
-        // 
-        Game g = new Game();
-        g.setGameTime();
-        g.setTimeCurrentPlayer(System.currentTimeMillis());
-        games.save(g);
-        	
-        // 체스판 생성
-        gameService.generateGrid(g);
+    @GetMapping("/init/{whiteUserId}/{blackUserId}")
+    public String init(final Model model,
+    		  @PathVariable("whiteUserId") Long whiteUserId,
+              @PathVariable("blackUserId") Long blackUserId
+    		) {
+    	   Optional<User> white = users.findById(whiteUserId);
+           Optional<User> black = users.findById(blackUserId);
+    	
+           if (white.isPresent() && black.isPresent()) {
+               if (white.get().getIsLogIn() && black.get().getIsLogIn()) {
+                   black.get().setIsPlaying(true);	
+                   
+                   
+                   users.save(black.get());
+                   
+                   games.deleteAll();
+                   figures.deleteAll();
+                   moves.deleteAll();
+                   // create a game
+                   Game g = new Game();
+                   
+                   Random rand = new Random();
+                   int randomValue = rand.nextInt() % 2;
+                   g.setCurrentPlayer(randomValue);
+                   //plater 추가
+                   g.setBlackPlayer(black.get());
+                   g.setWhitePlayer(white.get());
+                   g.setIsCheck(0);
+                   g.setIsPause(false);
+                   
+                   g.setGameTime();
+                   g.setTimeCurrentPlayer(System.currentTimeMillis());
 
-        figures.saveAll(g.getGrid());
-        log.info("figures saved from game/");
-        gameService.findKing(g);
-        games.save(g);
-        model.addAttribute("game", g);
+                   games.save(g);
 
-        return GAME_REDIRECTION +g.getId();
-    }
+                   gameService.generateGrid(g);
+
+                   figures.saveAll(g.getGrid());
+                   gameService.findKing(g);
+
+                   games.save(g);
+                   log.info("figures saved from game/");
+
+                   return GAME_REDIRECTION + g.getId();
+               }
+           }
+
+           return INDEX_REDIRECTION;
+       }
     
     @GetMapping("/play/{id}")
     public String play(final Model model,
@@ -82,6 +110,7 @@ public class GameController {
     				@AuthenticationPrincipal User currentUser
     		) {
     				
+
     	Optional<Game> game = games.findById(id);
     	
     	if(game.isPresent()) {
@@ -95,10 +124,10 @@ public class GameController {
     		model.addAttribute("time", gameService.getTimeElapsed(game.get().getGameTime()));
     		model.addAttribute("time_move",gameService.getTimeElapsed(game.get().getTimeCurrentPlayer()));
     		
-    		if (gameService.checkEchec(game.get())) {
-                game.get().setEchec(1);
+    		if (gameService.isCheck(game.get())) {
+                game.get().setIsCheck(1);
             } else {
-                game.get().setEchec(0);
+                game.get().setIsCheck(0);
             }
         	
             model.addAttribute("mate", gameService.checkMate(game.get()));

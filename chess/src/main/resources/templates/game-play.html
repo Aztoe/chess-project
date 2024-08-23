@@ -7,22 +7,27 @@
 <div th:fragment="content">
     <h1 class="text-center">Welcome to Chess</h1>
     <div class="container-fluid">
-     	<button type="button" class="btn btn-dark" id="leave" data-toggle="modal" data-target="#LeaveGame">Leave
+     	<button th:if="${!mate}" type="button" class="btn btn-dark" id="leave" th:attr="data-id=${user.getUsername()}" data-toggle="modal" data-target="#LeaveGame">Give up
         </button>
+        <a th:if="${mate}" href="#" class="btn btn-success mt-3 mb-3" th:href="@{/}">back</a>
             <h2>Game <span th:text="${game.getId()}"></span></h2>
     	<ul>
-    		<li><span id="Player1">Player 1</span> is
+    		<li>
+    			<!-- <span th:text="${game.getBlackPlayer().getUsername()}" id="Player1" 
+    			th:classappend="${game.getBlackPlayer().getPlaying() == true ? 'text-success' : 'text-danger'}">Player 1</span> -->
                 <span class="bold">Black</span>
                 (<span th:text="${game.getNumberOfPlay(1)}">0</span> moves)
             </li>
-            <li><span id="Player2">Player 2</span> is
-                <span class="bold">White</span>
+            <li>
+            	<!-- th:text="${game.getWhitePlayer().getUsername()}" id="Player2" 
+            	th:classappend="${game.getWhitePlayer().getPlaying() == true ? 'text-success' : 'text-danger'}" --><!-- >Player 2</span> is -->
+                <span class="bold"> White</span>
                 (<span th:text="${game.getNumberOfPlay(0)}">0</span> moves)
             </li>
     	
     	
-    		<li>남은 시간 : <span id="time" th:text="${time}">1</span> s</li>
-            <li>경과 시간: <span id="time_move" th:text="${time_move}">1</span> s</li>
+    		<li>TotalTime: <span id="time" th:text="${time}">1</span> s</li>
+            <li>moveTime: <span id="time_move" th:text="${time_move}">1</span> s</li>
     	</ul>		
     	<h4 class="Timer"></h4>
     	
@@ -34,27 +39,37 @@
         <h5 th:text="${error_msg}" class="alert-message">A message appear !</h5>
     </div>
     <div class="flex-container">
-        <table id="board">
-            <tr th:each="y: ${#numbers.sequence(0, game.WIDTH - 1)}" class="line">
-					<td th:each="x: ${#numbers.sequence(0, game.WIDTH - 1)}"
-						class="cell ui-droppable"
-						th:classappend="|${(x % 2 == y % 2) ? 'odd' : 'even' } ${(game.getFigureAt(x, y) != null) ? 'disabled' : ''}|"
-						th:attr="data-x=${x}, data-y=${y}">
-						<div th:if="${game.getFigureAt(x, y) != null}"
-								th:utext="${game.getFigureAt(x, y).getHtmlCode()}"
-								th:attr="data-id=${game.getFigureAt(x, y).getId()}"
-								class="figure ui-draggable"
-								th:classappend="|${(game.getFigureAt(x,y).getOwner() == 0) ? 'white' : 'black' }|"
-							style="position: relative;">♜</div>
-				</tr>
-				
+       <table id="board">
+            
+            <tr th:if="${game.getCurrentPlayer() == 0}" th:each="y: ${#numbers.sequence(0, game.WIDTH - 1)}" class="line">
+                <td th:each="x: ${#numbers.sequence(0, game.WIDTH - 1)}" class="cell ui-droppable"
+                    th:classappend="|${(x % 2 == y % 2) ? 'odd' : 'even' } ${(game.getFigureAt(x, y) != null) ? 'disabled' : ''} |"
+                    th:attr="data-x=${x}, data-y=${y}">
+                    <div th:if="${game.getFigureAt(x, y) != null}" th:utext="${game.getFigureAt(x, y).getHtmlCode()}"
+                         th:attr="data-id=${game.getFigureAt(x, y).getId()}" class="figure ui-draggable"
+                         th:classappend="|${(game.getFigureAt(x,y).getOwner() == 0) ? 'white' : 'black' }|"
+                         style="position: relative;">♜
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${game.getCurrentPlayer() == 1}" th:each="y: ${#numbers.sequence(game.WIDTH - 1, 0, -1)}" class="line">
+                <td th:each="x: ${#numbers.sequence(0, game.WIDTH - 1)}" class="cell ui-droppable"
+                    th:classappend="|${(x % 2 == y % 2) ? 'even' : 'odd' } ${(game.getFigureAt(x, y) != null) ? 'disabled' : ''} |"
+                    th:attr="data-x=${x}, data-y=${y}">
+                    <div th:if="${game.getFigureAt(x, y) != null}" th:utext="${game.getFigureAt(x, y).getHtmlCode()}"
+                         th:attr="data-id=${game.getFigureAt(x, y).getId()}" class="figure ui-draggable"
+                         th:classappend="|${(game.getFigureAt(x,y).getOwner() == 0) ? 'white' : 'black' }|"
+                         style="position: relative;">♜
+                    </div>
+                </td>
+            </tr>
         </table>
     </div>
 </div>
 
 <!-- List of moves -->
     <div class="container-fluid mt-5">
-        <h3 class="mb-4">Liste of moves</h3>
+        <h3 class="mb-4">List of moves</h3>
         <table class="table">
             <thead class="thead-dark">
                 <tr>

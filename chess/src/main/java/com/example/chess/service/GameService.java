@@ -211,7 +211,7 @@ public class GameService {
 			}
 	    }
 	    
-	    public boolean checkEchec(Game game) {
+	    public boolean isCheck(Game game) {
 	    	int xKing, yKing;
 	    	int player = game.getCurrentPlayer();
 	    	boolean response =false;
@@ -291,6 +291,11 @@ public class GameService {
 	    }
 	    
 	    public Long getTimeElapsed(final Long time) {
+	    	
+	    	if (time == null) {
+	            return 0L;
+	        }
+	    	
 	        return (System.currentTimeMillis() - time) / S_CONVERT;
 	    }
 }

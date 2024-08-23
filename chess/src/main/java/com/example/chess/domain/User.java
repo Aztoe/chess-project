@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,6 +40,13 @@ public class User implements UserDetails {
 
 	    @Transient
 	    private String confirmPassword;
+	   
+	    @Column
+	    private Boolean isLogIn = false;
+	    
+	    @Column
+	    private Boolean isPlaying = false;
+
 
 	    @ManyToMany(fetch = FetchType.EAGER)
 	    private Collection<Authority> authorities;
@@ -63,6 +71,16 @@ public class User implements UserDetails {
 			return true;
 		}
 
+		
+
+		public Boolean getIsPlaying() {
+			return isPlaying;
+		}
+
+		public void setIsPlaying(Boolean isPlaying) {
+			this.isPlaying = isPlaying;
+		}
+		
 	    
 	    
 }
