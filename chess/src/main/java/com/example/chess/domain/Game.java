@@ -65,9 +65,9 @@ public class Game {
     private List<Move> moves;
 	
 	@OneToOne
-	private User whitePlayer;
+	private User whitePlayer =null;
 	@OneToOne
-	private User blackPlayer;
+	private User blackPlayer = null;
 		
 	@Column(nullable = false)
 	private Integer currentPlayer =START_PLAYER;
@@ -78,7 +78,7 @@ public class Game {
 	@Column 
 	private Long blackKingId;
 	@Column
-	private Integer echec;
+	private Integer isCheck=0;
 	
 	@Column
 	private Long timeWhitePlayer;
@@ -88,6 +88,11 @@ public class Game {
 
 	@Column
 	private Long gameTime;
+	@Column
+	private Boolean isFinish = false;
+	@Column
+	private Boolean isPause = false;
+	
 	
 	
 	    public void changePlayer() {
@@ -169,5 +174,29 @@ public class Game {
 
         return count;
     }
-
+    
+    public User getUserWinner() {
+    	if(winner ==PlayerName.BLACK) {
+    		return blackPlayer;
+    	} else {
+    		return whitePlayer;
+    	}
+    }
+    
+    public User getUserLooser() {
+    	if(winner ==PlayerName.BLACK) {
+    		return whitePlayer;
+    		
+    	}else {
+    		return blackPlayer;
+    	}
+    }
+    
+    public Long getTimeElasped(final Long time) {
+    	if(time ==null) {
+    		return 0L;
+    	}
+    	
+    	return (System.currentTimeMillis() - time) /S_CONVERT;
+    }
 }

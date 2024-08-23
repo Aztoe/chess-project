@@ -7,16 +7,21 @@
 <div th:fragment="content">
     <h1 class="text-center">Welcome to Chess</h1>
     <div class="container-fluid">
-     	<button type="button" class="btn btn-dark" id="leave" data-toggle="modal" data-target="#LeaveGame">Leave
+     	<button th:if="${!mate}" type="button" class="btn btn-dark" id="leave" th:attr="data-id=${user.getUsername()}" data-toggle="modal" data-target="#LeaveGame">Give up
         </button>
+        <a th:if="${mate}" href="#" class="btn btn-success mt-3 mb-3" th:href="@{/}">back</a>
             <h2>Game <span th:text="${game.getId()}"></span></h2>
     	<ul>
-    		<li><span id="Player1">Player 1</span> is
+    		<li>
+    			<!-- <span th:text="${game.getBlackPlayer().getUsername()}" id="Player1" 
+    			th:classappend="${game.getBlackPlayer().getPlaying() == true ? 'text-success' : 'text-danger'}">Player 1</span> -->
                 <span class="bold">Black</span>
                 (<span th:text="${game.getNumberOfPlay(1)}">0</span> moves)
             </li>
-            <li><span id="Player2">Player 2</span> is
-                <span class="bold">White</span>
+            <li>
+            	<!-- th:text="${game.getWhitePlayer().getUsername()}" id="Player2" 
+            	th:classappend="${game.getWhitePlayer().getPlaying() == true ? 'text-success' : 'text-danger'}" --><!-- >Player 2</span> is -->
+                <span class="bold"> White</span>
                 (<span th:text="${game.getNumberOfPlay(0)}">0</span> moves)
             </li>
     	
