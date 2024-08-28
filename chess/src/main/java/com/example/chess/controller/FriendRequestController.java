@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.chess.controller.form.FriendRequestForm;
 import com.example.chess.domain.FriendRequest;
@@ -64,13 +65,17 @@ public class FriendRequestController {
 	@PostMapping("/send")
 	public String sendFriendRequestToUser(@Valid @ModelAttribute("request")
 										  FriendRequestForm form,
-										  BindingResult result
+										  BindingResult result,
+										  Model model,
+										  RedirectAttributes redirectAttributes
 			) {
 		if(result.hasErrors()) {
-			return "redirect:";
+			return "redirect:send";
 		}
 		User receiver = users.findByUsername(form.getUsername());
 
+		
+		
         if (receiver != null) {
             FriendRequest req = new FriendRequest();
             req.setId(form.getId());
@@ -79,9 +84,16 @@ public class FriendRequestController {
             req.setIsAccepted(false);
 
             friendsRequest.save(req);
+            
+            redirectAttributes.addFlashAttribute("successMessage", receiver.getUsername()+"님께 친구 요청을 보냈습니다 " +   "!");
+
+        } else {
+        	result.rejectValue("username", "error.username","해당 닉네임은 존재하지 않습니다.");
+        	model.addAttribute("request", form);
         }
+         
 		
-		return "redirect:/";
+		return "redirect:/friends/send";
 	
 	}
 	
@@ -108,7 +120,7 @@ public class FriendRequestController {
 	            }
 	        }
 
-	        return "redirect:/";
+	        return "redirect:/friends/send";
 	    }
 	 
 	 	@GetMapping("/decline")
