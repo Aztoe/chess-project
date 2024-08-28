@@ -17,7 +17,9 @@ import com.example.chess.controller.form.PromoteForm;
 import com.example.chess.domain.Figure;
 import com.example.chess.domain.FigureName;
 import com.example.chess.domain.Game;
+import com.example.chess.domain.GameList;
 import com.example.chess.domain.Move;
+import com.example.chess.domain.PlayerName;
 import com.example.chess.domain.User;
 import com.example.chess.repository.FigureRepository;
 import com.example.chess.repository.GameListRepository;
@@ -115,7 +117,11 @@ public class GameController {
     	
     	if(game.isPresent()) {
     		
-    	
+    		 if (game.get().getWhitePlayer().getIsPlaying() && game.get().getBlackPlayer().getIsPlaying()) {
+                 game.get().setIsPause(false);
+             }
+
+    		
     		
     		model.addAttribute("game", game.get());
 
@@ -135,6 +141,7 @@ public class GameController {
             if(gamesList.findByGameId(id) != null)
                 model.addAttribute("gameList", gamesList.findByGameId(id));
 
+            currentUser.setIsPlaying(true);
             users.save(currentUser);
     		
     		
@@ -155,12 +162,15 @@ public class GameController {
     		@PathVariable("gameId") final Long gameId,
     		@PathVariable("pawnId") final Long pawnId,
     		@PathVariable("x") final Integer x,
-    		@PathVariable("y") final Integer y) {
+    		@PathVariable("y") final Integer y,
+    		@AuthenticationPrincipal User currentUser
+    		) {
     	Optional<Game> game = games.findById(gameId);
     	if(game.isPresent()) {
     		Figure f = figures.getOne(pawnId);
     		
-    		if(f.getOwner() ==game.get().getCurrentPlayer() ) {
+    		if(f.getOwner() ==game.get().getCurrentPlayer()
+    				&& game.get().getCurrentUser().getUsername().equals(currentUser.getUsername())) {
     			if(gameService.checkAny(game.get(), f, x, y)) {
     				Move m = new Move();
     				m.setPositionStart(f.getMoveCode());
@@ -204,7 +214,8 @@ public class GameController {
     public String moveOnAnyPawn(final Model model,
                                  @PathVariable("gameId") final Long gameId,
                                  @PathVariable("pawnId1") final Long pawnId1,
-                                 @PathVariable("pawnId2") final Long pawnId2
+                                 @PathVariable("pawnId2") final Long pawnId2,
+                                 @AuthenticationPrincipal User currentUser
     ) {
         Optional<Game> game = games.findById(gameId);
         if (game.isPresent()) {
@@ -212,7 +223,9 @@ public class GameController {
         	Figure f1 = figures.getOne(pawnId1);
         	Figure f2 = figures.getOne(pawnId2);
         	
-        	 if (f1.getOwner() == game.get().getCurrentPlayer() && f1.getOwner() != f2.getOwner()) {
+        	 if (f1.getOwner() == game.get().getCurrentPlayer() && f1.getOwner() != f2.getOwner()
+        			 &&game.get().getCurrentUser().getUsername().equals(currentUser.getUsername())
+        			 ) {
         	
         			if(gameService.checkAny(game.get(), f1, f2.getX(), f2.getY())) {
         				Move m = new Move();
@@ -231,9 +244,19 @@ public class GameController {
                          m.setPlayer(game.get().getCurrentPlayer());
                          m.setTime(gameService.getTimeElapsed(game.get().getTimeCurrentPlayer()));
                          m.setGame(game.get()); 
-                		
+                         moves.save(m);
+                         
+                         if (gameService.isCheck(game.get())) {
+                             game.get().setIsCheck(1);
+                         } else {
+                             game.get().setIsCheck(0);
+                         }
+                         
+                         
                 		Game g = game.get();
                          g.changePlayer();
+                         g.setTimeCurrentPlayer(System.currentTimeMillis());
+                         g.getMoves().add(m);
                          g.getGrid().remove(f2);
                          
                          games.save(g);	
@@ -315,6 +338,41 @@ public class GameController {
     	}
         return INDEX_REDIRECTION;
 
+    }
+    
+    @GetMapping("/endGame/{gameId}/{winner}/{looser}")
+    public String EndGame(
+    	@PathVariable("gameId") final Long gameId,
+    	@PathVariable("winner") final String winner,
+    	@PathVariable("looser") final String looser	
+    ) {
+    	
+    	 Optional<Game> game = games.findById(gameId);
+    	 
+    	 if (game.isPresent()) {
+    		 
+    		 
+    		 
+    		 
+             game.get().setIsFinish(true);
+             game.get().setIsPause(true);
+             if (game.get().getBlackPlayer().getUsername().equals(winner)) {
+                 game.get().setWinner(PlayerName.BLACK);
+             } else if (game.get().getWhitePlayer().getUsername().equals(winner)) {
+                 game.get().setWinner(PlayerName.WHITE);
+             }
+             games.save(game.get());
+         }
+
+         if (gamesList.findByGameId(gameId) == null) {
+             GameList gameList = new GameList();
+             gameList.setWinner(winner);
+             gameList.setLooser(looser);
+             gameList.setGameId(gameId);
+             gamesList.save(gameList);
+         }
+
+         return GAME_REDIRECTION + gameId;
     }
     
     	

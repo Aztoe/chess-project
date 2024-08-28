@@ -34,8 +34,6 @@ public class Figure {
     @Column
     Integer y;
     
-    
-    
     @Column
     String name;
 

@@ -3,6 +3,7 @@ package com.example.chess;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.chess.domain.Figure;
@@ -23,7 +24,8 @@ class GameServiceTest {
         service.generateGrid(game);
     }
 	
-	 @Test
+	 	@Test
+	 	@DisplayName("Bishop이 규칙대로 이동")
 	    public void checkBishopTest() {
 	        assertThat(service.checkBishop(game, 2, 7, 0, 5)).isFalse();
 	        game.getFigureAt(1, 6).setY(5);
@@ -39,6 +41,44 @@ class GameServiceTest {
 
 	        assertThat(service.checkBishop(game, 2, 7, -1, 8)).isFalse();
 	     }
+	 
+	 @Test
+	 @DisplayName("ROOK이 규칙대로 이동")
+	 public void checkRookTest() {
+		 //pawn 위치 이동
+		 game.getFigureAt(0, 6).setY(4);
+		 
+		 assertThat(service.checkRook(game, 0, 7, 0, 5)).isTrue();
+		 
+		 assertThat(service.checkRook(game, 0, 7, 0, 6)).isTrue();
+		 
+		 assertThat(service.checkRook(game, 3, 4, 2, 4)).isTrue();
+		 
+		 assertThat(service.checkRook(game, 3, 4, 4, 4)).isTrue();
+		 //board 밖으로
+		 assertThat(service.checkRook(game, 4, 4, -1, 0)).isFalse();
+		 //
+		 assertThat(service.checkRook(game, 3, 3, 4, 4)).isFalse();
+	 }
+	 
+	@Test
+	@DisplayName("PAWN이 규칙대로 이동")
+	public void checkPawnTest() {
+		Figure pawn = game.getFigureAt(0, 6);
+		
+		assertThat(service.checkPawn(game, pawn,0, 4)).isTrue();
+		
+		assertThat(service.checkPawn(game, pawn, 0, 5)).isTrue();
+		
+		assertThat(service.checkPawn(game, pawn, 1, 5)).isFalse();
+		
+		pawn.setY(2);
+		pawn.setX(1);
+		//대각선 
+        assertThat(service.checkPawn(game, pawn, 2, 1)).isTrue();
+        //대각선
+        assertThat(service.checkPawn(game, pawn, 0, 1)).isTrue();
+	}
 	
 	@Test
 	public void isPositiveTest() {
@@ -75,6 +115,48 @@ class GameServiceTest {
 
 
       assertThat(service.checkKing(game, f, 2, 7)).isTrue();
+    }
+    
+    @Test
+    public void findKingTest() {
+        for(long i = 0; i < 8; i++){
+            for(long j = 0; j <  8; j++) {
+                if(game.getFigureAt((int)i, (int)j) != null)
+                    game.getFigureAt((int)i,(int)j).setId(i+j);
+            }
+        }
+        service.findKing(game);
+        assertThat(game.getWhiteKingId()).isNotNull();
+        assertThat(game.getBlackKingId()).isNotNull();
+    }
+    
+    @Test
+    @DisplayName("체크 상태에서 킹이 체크 상태인지 확인한다")
+    public void isCheckTest() {
+    	for(long i = 0; i < 8; i++){
+            for(long j = 0; j <  8; j++) {
+                if(game.getFigureAt((int)i, (int)j) != null)
+                    game.getFigureAt((int)i,(int)j).setId(i+j);
+            }
+    	}
+    	service.findKing(game);
+    	
+    	Figure k1 = game.getFigureAt(4, 7);
+    	k1.setY(2);
+    	  assertThat(k1).isNotNull();
+    	game.setCurrentPlayer(0);
+    	
+    	assertThat(service.isCheck(game)).isTrue();
+    	
+    	k1.setY(3);
+    	
+    	assertThat(service.isCheck(game)).isFalse();
+    	
+    	//black king
+    	game.setCurrentPlayer(1);
+    	k1.setY(2);
+    	assertThat(service.isCheck(game)).isTrue();
+    	
     }
     
     

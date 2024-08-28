@@ -22,28 +22,18 @@ let board = $("#board");
 
 
 
-/*board.find('.figure')
-    .draggable({
-        revert: 'invalid',
-        containment: board
-    })
-board.find('.figure').droppable({
-    drop: function(ev, ui) {
-        var dropped = ui.draggable;
-        var droppedOn = $(this);
-        $(droppedOn).droppable("disable");
-        $(dropped).parent().droppable("enable");
-        $(dropped).detach().css({top: 0, left: 0}).appendTo(droppedOn);
-    }
-});*/
+
 
 //board.find('.figure').not('td:empty').droppable("disable");
 
 
     $(function(e) {
     	
-        let turnText =  $('#player-turn').html();
-
+        let turnText = "";
+		 if ($('#mate').html() == null && $('#winner').html() == null)
+        turnText = $('#player-turn').html();
+        
+        
         $('.figure').draggable({
             containment: board,
             zIndex: 1,
@@ -70,17 +60,6 @@ board.find('.figure').droppable({
                 let gameId = $(location).attr('href').split('/')[5]; // http://localhost:8080/game/{id}
 
                 let deleteUrl;
-/*
-                if($(this).attr('class').indexOf('disabled') >0) {
-                    deleteUrl = '/game/delete/' + gameId + '/' + $(this).children().attr('data-id');
-                    $(this).children().remove();
-                    
-                    $.ajax({
-                        url: deleteUrl, success: function (result) {
-                            console.log("Piece killed");
-                        }
-                    });
-                }*/
                 const oldPawnId = $(droppedOn).children();
                 const oldClass =$(this).attr('class').indexOf('disabled');
                 
@@ -126,10 +105,24 @@ board.find('.figure').droppable({
 });
     
     function leaveGame() {
-    let gameId = $(location).attr('href').split('/')[5]; // http://localhost:8080/game/play/{id}
-    window.location.href = '/game/resigning/' + gameId;
-}
     
+    
+    
+    let gameId = $(location).attr('href').split('/')[5]; // http://localhost:8080/game/play/{id}
+    let looser = $('#leave').attr('data-id');
+    let winner;
+
+    if($('#Player1').text() === looser) {
+        winner = $('#Player2').text();
+    }
+    else {
+        winner = $('#Player1').text();
+    }
+    window.location.href = '/game/endgame/' + gameId + '/' + winner + '/' + looser;
+    
+    
+}
+
 
 console.log("js fully loaded")
 
@@ -143,3 +136,30 @@ console.log("js fully loaded")
                         }
                     }
                 })*/
+                
+                /*
+                if($(this).attr('class').indexOf('disabled') >0) {
+                    deleteUrl = '/game/delete/' + gameId + '/' + $(this).children().attr('data-id');
+                    $(this).children().remove();
+                    
+                    $.ajax({
+                        url: deleteUrl, success: function (result) {
+                            console.log("Piece killed");
+                        }
+                    });
+                }*/
+                
+                /*board.find('.figure')
+    .draggable({
+        revert: 'invalid',
+        containment: board
+    })
+board.find('.figure').droppable({
+    drop: function(ev, ui) {
+        var dropped = ui.draggable;
+        var droppedOn = $(this);
+        $(droppedOn).droppable("disable");
+        $(dropped).parent().droppable("enable");
+        $(dropped).detach().css({top: 0, left: 0}).appendTo(droppedOn);
+    }
+});*/

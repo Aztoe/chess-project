@@ -2,6 +2,7 @@ package com.example.chess;
 import static org.mockito.Mockito.lenient;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,6 +33,7 @@ class DbUserDetailServiceTest {
 	    private userServiceImpl userService;
 	    
 	    @Test
+
 	    public void createFormNullTest() {
 	        UserForm result = service.createForm(null);
 
@@ -39,6 +41,8 @@ class DbUserDetailServiceTest {
 	    }
 	    
 	    @Test
+	    @DisplayName("User 객체를 기반으로 UserForm 객체를 생성할 수 있어야 한다.")
+
 	    public void createFormTest() {
 	        User u = new User();
 	        u.setId(3L);
@@ -52,6 +56,8 @@ class DbUserDetailServiceTest {
 	    }
 	    
 	    @Test
+	    @DisplayName("UserForm 객체를 통해 새로운 사용자를 등록할 수 있어야 한다.")
+
 	    public void saveUserTest() {
 	        User u = new User();
 	        u.setId(0L);
@@ -70,6 +76,8 @@ class DbUserDetailServiceTest {
 	    }
 
 	    @Test
+	    @DisplayName("User 객체의 비밀번호가 설정되어 있는지 확인한다.")
+
 	    void testPasswordIsNotNull() {
 	        User user = new User();
 	        user.setPassword("encodedPassword");  // 비밀번호를 설정합니다.
