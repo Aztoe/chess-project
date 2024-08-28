@@ -50,8 +50,9 @@ public class DbUserDetailService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		UserDetails user = users.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
+        
+		if (user == null) {
+            throw new UsernameNotFoundException("No user found with username "+username);
         }
 		return user;
 	}
@@ -62,6 +63,7 @@ public class DbUserDetailService implements UserDetailsService {
 		
 		  UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, password);
 
+		  
 		  if (usernamePasswordAuthenticationToken.isAuthenticated()) {
 	            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 	            log.debug(String.format("자동 로그인 %s !!", username));

@@ -88,11 +88,9 @@ public class GameService {
 
 	    public boolean checkKing(Game game, Figure f1, int nx, int ny) {
 	    	if (checkBigCastling(game, f1, nx, ny)) {
-	    		log.info("queenSide");
 	            startCastling(game, 0, 3);
 	            return true;
 	        } else if (checkSmallCastling(game, f1, nx, ny)) {
-	        	log.info("kingSide");
 	            startCastling(game, 7, 5);
 	            return true;
 	        } else {
@@ -135,7 +133,6 @@ public class GameService {
 	        switch (name) {
 	            case KING:
 	                check = checkKing(game,f1 , dx, dy);
-	                log.info("checkKing 실행");
 	                break;
 	            case QUEEN:
 	                check = checkQueen(game, x, y, dx, dy);
@@ -282,7 +279,6 @@ public class GameService {
 	        }
 	        
 	        game.setGrid(grid);
-	        log.info("grid successfully generated");
 	    }
 	    
 	    public boolean enablePawnPromote(Figure f) {

@@ -23,7 +23,8 @@ import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 import com.example.chess.service.DbUserDetailService;
 
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
