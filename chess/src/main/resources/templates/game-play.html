@@ -9,6 +9,49 @@
     <div class="container-fluid">
      	<button th:if="${!mate}" type="button" class="btn btn-dark" id="leave" th:attr="data-id=${user.getUsername()}" data-toggle="modal" data-target="#LeaveGame">Give up
         </button>
+          <!-- Leave modal -->
+    <div class="modal fade" id="LeaveGame" tabindex="-1" role="dialog" aria-labelledby="LeaveTheGame"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">게임 나가기</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure ?</p>
+                    <a class="btn btn-danger text-white" onclick="leaveGame();">Yes</a>
+                    <a class="btn btn-secondary text-white" data-dismiss="modal">Close</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- List of moves -->
+    <div class="container-fluid mt-5">
+        <h3 class="mb-4">List of moves</h3>
+        <table class="table">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Player</th>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="move: ${game.getMoves()}">
+                    <th scope="row" th:text="${move.getPlayer() == 1 ? 'Black' : 'White'}">1</th>
+                    <td th:text="${move.getPositionStart()}">E4</td>
+                    <td th:text="${move.getPositionEnd()}">B6</td>
+                    <td><span th:text="${move.getTime()}">3</span> s</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
         <a th:if="${mate}" href="#" class="btn btn-success mt-3 mb-3" th:href="@{/}">back</a>
             <h2>Game <span th:text="${game.getId()}"></span></h2>
     	<ul>
@@ -67,49 +110,10 @@
     </div>
 </div>
 
-<!-- List of moves -->
-    <div class="container-fluid mt-5">
-        <h3 class="mb-4">List of moves</h3>
-        <table class="table">
-            <thead class="thead-dark">
-                <tr>
-                    <th scope="col">Player</th>
-                    <th scope="col">Start</th>
-                    <th scope="col">End</th>
-                    <th scope="col">Time</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="move: ${game.getMoves()}">
-                    <th scope="row" th:text="${move.getPlayer() == 1 ? 'Black' : 'White'}">1</th>
-                    <td th:text="${move.getPositionStart()}">E4</td>
-                    <td th:text="${move.getPositionEnd()}">B6</td>
-                    <td><span th:text="${move.getTime()}">3</span> s</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    
-     <!-- Leave modal -->
-    <div class="modal fade" id="LeaveGame" tabindex="-1" role="dialog" aria-labelledby="LeaveTheGame"
-         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Leave the game</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure ?</p>
-                    <a class="btn btn-danger text-white" onclick="leaveGame();">Yes</a>
-                    <a class="btn btn-secondary text-white" data-dismiss="modal">Close</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-</body>
+
+   
+
+
 
 </body>
+</html>

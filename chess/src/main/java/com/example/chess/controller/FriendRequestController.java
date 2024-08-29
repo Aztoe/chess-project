@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.chess.controller.form.FriendRequestForm;
+import com.example.chess.controller.form.UserForm;
 import com.example.chess.domain.FriendRequest;
 import com.example.chess.domain.User;
 import com.example.chess.repository.FriendRequestRepository;
@@ -25,7 +26,8 @@ import com.example.chess.service.FriendRequestService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @Controller
 @RequestMapping("/friends")
 @RequiredArgsConstructor
@@ -47,18 +49,15 @@ public class FriendRequestController {
 		
 		List<String> senders =friends.stream().map(FriendRequest::getSender).collect(Collectors.toList());
 			
-				userList.removeIf(user ->{
-					return user.getId().equals(currentUser.getId()) ||
-							senders.contains(user.getUsername());
-				});
+		userList.removeIf(user ->{return user.getId().equals(currentUser.getId()) ||senders.contains(user.getUsername());});
 				
-				  FriendRequestForm form = new FriendRequestForm();
-			        form.setSender(currentUser.getUsername());
+		FriendRequestForm form = new FriendRequestForm();
+		form.setSender(currentUser.getUsername());
 
-			        model.addAttribute("users", userList);
-			        model.addAttribute("request", form);
+		model.addAttribute("users", userList);
+		model.addAttribute("request", form);
 
-			        return "user/send-friend-request";
+		return "user/send-friend-request";
 		
 	}
 	
@@ -66,17 +65,27 @@ public class FriendRequestController {
 	public String sendFriendRequestToUser(@Valid @ModelAttribute("request")
 										  FriendRequestForm form,
 										  BindingResult result,
+										  UserForm userForm,
 										  Model model,
+										  @AuthenticationPrincipal User currentUser,
 										  RedirectAttributes redirectAttributes
 			) {
-		if(result.hasErrors()) {
-			return "redirect:send";
-		}
-		User receiver = users.findByUsername(form.getUsername());
+				User receiver = users.findByUsername(form.getUsername());
+		if (receiver == null) {
+			result.rejectValue("username", "error.username", "해당 닉네임은 존재하지 않습니다.");
+			model.addAttribute("request", form);
+			return "user/send-friend-request";
+			    }
+	//친구요청 중복확인	
+	boolean	userExists = friendsRequest.existsBySenderAndReceiver(currentUser.getUsername(), receiver);
 
-		
-		
-        if (receiver != null) {
+	if(userExists == true) {
+		  result.rejectValue("username", "error.username", "이미 친구 요청을 보냈습니다.");
+          model.addAttribute("request", form);
+          return "user/send-friend-request";
+	}
+	
+        if (receiver!= null) {
             FriendRequest req = new FriendRequest();
             req.setId(form.getId());
             req.setSender(form.getSender());
@@ -85,14 +94,12 @@ public class FriendRequestController {
 
             friendsRequest.save(req);
             
+            log.info("friendRequest 요청 성공");
+            
             redirectAttributes.addFlashAttribute("successMessage", receiver.getUsername()+"님께 친구 요청을 보냈습니다 " +   "!");
 
-        } else {
-        	result.rejectValue("username", "error.username","해당 닉네임은 존재하지 않습니다.");
-        	model.addAttribute("request", form);
-        }
-         
-		
+        } 		
+        
 		return "redirect:/friends/send";
 	
 	}

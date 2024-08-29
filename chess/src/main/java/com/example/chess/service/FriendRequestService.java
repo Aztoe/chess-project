@@ -44,4 +44,32 @@ public class FriendRequestService {
 		}
 		return userFriends;
 	}
+	
+	public boolean sendFriendRequest(User sender, String receiverUsername) {
+		User receiver = users.findByUsername(receiverUsername);
+		
+		if( receiver!=null && !receiver.getUsername().equals(sender.getUsername())) {
+			boolean requestExists = friendRequests.existsBySenderAndReceiver(sender.getUsername(), receiver);
+			
+			  if (!requestExists) {
+	                FriendRequest req = new FriendRequest();
+	                req.setSender(sender.getUsername());
+	                req.setReceiver(receiver);
+	                req.setIsAccepted(false);
+
+	                friendRequests.save(req);
+	                return true; 
+	            }
+		}
+		return false;
+	}
+	
+	public boolean userExists(String username) {
+        return users.findByUsername(username) != null;
+    }
+
+    public boolean isSameAsSender(User sender, String receiverUsername) {
+        return sender.getUsername().equals(receiverUsername);
+    }
+
 }
