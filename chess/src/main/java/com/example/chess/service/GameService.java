@@ -213,7 +213,7 @@ public class GameService {
 	    	int player = game.getCurrentPlayer();
 	    	boolean response =false;
 	    	
-	    	if(player==1) {
+	    	if(player==0) {
 	    		xKing = game.getFigureById(game.getWhiteKingId()).getX();
 	    		yKing = game.getFigureById(game.getWhiteKingId()).getY();
 	    	} else {
